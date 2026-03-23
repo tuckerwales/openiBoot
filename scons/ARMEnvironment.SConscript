@@ -6,20 +6,20 @@ import os
 
 def ARMEnvironment(*a, **kw):
 	env = Environment(tools=['gas', 'gcc', 'gnulink', 'ar'], ENV=os.environ, *a, **kw)
-	plat_flags = ['-mlittle-endian', '-mfpu=vfp', '-mthumb', '-mthumb-interwork', '-fPIC']
+	plat_flags = ['-mlittle-endian', '-mfpu=vfp', '-mthumb', '-mthumb-interwork', '-fPIC', '-std=gnu11']
 	env.Append(CPPPATH = ['#includes'])
 	env.Append(CPPFLAGS = plat_flags+['-nostdlib'])
 	env.Append(ASPPFLAGS = ['-xassembler-with-cpp'])
-	env.Append(LINKFLAGS = plat_flags+['-nostdlib', '--nostdlib', '-Ttext=0x0'])
+	env.Append(LINKFLAGS = plat_flags+['-nostdlib', '-Ttext=0x0'])
 	env.Append(LIBS = ['gcc'])
 
 	env['PROGSUFFIX'] = ''
 
-	if not env.has_key("CROSS"):
-		if env['ENV'].has_key("CROSS"):
+	if "CROSS" not in env:
+		if "CROSS" in env['ENV']:
 			env['CROSS'] = env['ENV']['CROSS']
 		else:
-			env["CROSS"] = 'arm-elf-'
+			env["CROSS"] = 'arm-none-eabi-'
 
 	env["CC"] = env["CROSS"] + 'gcc'
 	env["OBJCOPY"] = env["CROSS"] + 'objcopy'

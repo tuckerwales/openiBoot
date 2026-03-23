@@ -3,6 +3,7 @@ Import("*")
 env = env.Clone()
 env.Append(CPPPATH = [Dir('includes')])
 env.Append(CPPDEFINES = ['ARM11', 'CONFIG_S5L8720'])
+env.Append(CPPFLAGS = ['-mcpu=arm1176jzf-s'])
 
 env.AddModules([
 	"acm",

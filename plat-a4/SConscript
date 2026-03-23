@@ -3,6 +3,7 @@ Import("*")
 env = env.Clone()
 env.Append(CPPPATH = [Dir('includes')])
 env.Append(CPPDEFINES = ['ARM_A8', 'CONFIG_A4', 'MALLOC_NO_WDT', 'BIG_FONT'])
+env.Append(CPPFLAGS = ['-mcpu=cortex-a8'])
 
 env.AddModules([
 	"acm",

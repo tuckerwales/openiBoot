@@ -78,7 +78,7 @@ def DoxyfileParse(file_contents):
          append_data( data, key, new_data, '\\' )
 
    # compress lists of len 1 into single strings
-   for k, v in data.items():
+   for k, v in list(data.items()):
       if len(v) == 0:
          data.pop(k)
 
@@ -153,7 +153,10 @@ def DoxyEmitter(source, target, env):
       "XML": ("NO", "xml"),
    }
 
-   data = DoxyfileParse(source[0].get_contents())
+   contents = source[0].get_contents()
+   if isinstance(contents, bytes):
+      contents = contents.decode('utf-8')
+   data = DoxyfileParse(contents)
 
    targets = []
    out_dir = data.get("OUTPUT_DIRECTORY", ".")

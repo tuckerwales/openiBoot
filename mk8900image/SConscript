@@ -10,9 +10,15 @@ if platform.system() == 'Linux':
 		libs += ["x86/libxpwn.a", "x86/libcommon.a"]
 
 if platform.system() == 'Darwin':
-	libs += ["mac-x86/libxpwn.a", "mac-x86/libcommon.a"]
-
-mk8900image = henv.Program('mk8900image', ['mk8900image.c'] + libs, LIBPATH='/usr/X11/lib', LIBS=['m', 'dl', 'png', 'crypto', 'z'])
+	if platform.machine() == 'arm64':
+		# On Apple Silicon, use the pre-built x86_64 binary (runs via Rosetta).
+		# Rebuilding from source would require x86_64 libpng/libcrypto not available via Homebrew.
+		mk8900image = [File('mk8900image')]
+	else:
+		libs += ["mac-x86/libxpwn.a", "mac-x86/libcommon.a"]
+		mk8900image = henv.Program('mk8900image', ['mk8900image.c'] + libs, LIBPATH='/usr/X11/lib', LIBS=['m', 'dl', 'png', 'crypto', 'z'])
+else:
+	mk8900image = henv.Program('mk8900image', ['mk8900image.c'] + libs, LIBPATH='/usr/X11/lib', LIBS=['m', 'dl', 'png', 'crypto', 'z'])
 
 def generate_actions(source, target, env, for_sig=False, **kw):
 	Depends(target, mk8900image)
