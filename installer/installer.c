@@ -35,12 +35,12 @@ static void installer_init()
 }
 MODULE_INIT_BOOT(installer_init);
 
-void cmd_progress(int argc, char **argv)
+error_t cmd_progress(int argc, char **argv)
 {
 	if(argc != 2)
 	{
 		bufferPrintf("Usage: %s <percentage>\n", argv[0]);
-		return;		
+		return SUCCESS;
 	}
 
 	int x,y,w;
@@ -98,5 +98,6 @@ void cmd_progress(int argc, char **argv)
 				cmd_progress_full_width, cmd_progress_full_height,
 				w, cmd_progress_full_height);
 	}
+	return SUCCESS;
 }
 COMMAND("progress", "Set the install progress.", cmd_progress);
