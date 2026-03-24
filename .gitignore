@@ -1,4 +1,4 @@
-.sconsign.dblite
+build/
 *.img3
 *.img2
 *.bin

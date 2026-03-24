@@ -2,7 +2,7 @@ This folder will contain doxygen generated documentation.
 
 To generate the documentation, make sure you have the appropriate
 doxygen package installed for your operating system (and that it's
-on the system path), then run `scons docs`.
+on the system path), then run `make docs`.
 
 This will generated html and latex directories alongside this
 document.

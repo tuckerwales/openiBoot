@@ -30,38 +30,38 @@ Compiling
 To run openiboot from recovery mode (a.k.a iboot), you’ll need to create an img3 image.
 To run openiboot from DFU mode, you'll need to create a bin.
 
-You will need a system capable of running x86 Linux binaries (Build requires scons, libssl, libpng, libcurl, libusb, libreadline and pthread). 
+You will need `arm-none-eabi-gcc` on your PATH (e.g. install `gcc-arm-embedded` via Homebrew on macOS).
 
 Change into the openiboot subfolder
 
 **For iPod Touch 1G, run:**
-`scons iPodTouch1G`
+`make iPodTouch1G`
 
 **For iPhone 2G, run:**
-`scons iPhone2G`
+`make iPhone2G`
 
 **For iPhone 3G, run:**
-`scons iPhone3G`
+`make iPhone3G`
 
 **For iPod Touch 2G, run:**
-`scons iPodTouch2G`
+`make iPodTouch2G`
 
 **For iPhone 3GS, run:**
-`scons iPhone3GS`
+`make iPhone3GS`
 
 **For iPhone 4, run:**
-`scons iPhone4`
+`make iPhone4`
 
 **For iPod Touch 4G, run:**
-`scons iPodTouch4G`
+`make iPodTouch4G`
 
 **For iPad 1G, run:**
-`scons iPad1G`
+`make iPad1G`
 
 **For Apple TV 2G, run:**
-`scons aTV2G`
+`make aTV2G`
 
-*Alternatively a Makefile has been provided in the openiboot subfolder should you prefer to use it this way - this is not covered by this README but is provided for your convenience should you wish to use it*
+Append `D` to any target for a debug build (e.g. `make iPhone2GD`). To build all targets at once, run `make`.
 
 Menu Configuration
 ---------------------------------------------------

@@ -1626,26 +1626,7 @@ static error_t h2fmi_device_read_single_page(nand_device_t *_dev, uint32_t _chip
 			_buffer, _spareBuffer, NULL, NULL, disable_aes);
 }
 
-static inline void auto_store(void *_ptr, size_t _sz, uint32_t _val)
-{
-	switch(_sz)
-	{
-	case 0:
-		return;
-
-	case 1:
-		*((uint8_t*)_ptr) = _val;
-		return;
-
-	case 2:
-		*((uint16_t*)_ptr) = _val;
-		return;
-
-	case 4:
-		*((uint32_t*)_ptr) = _val;
-		return;
-	}
-}
+/* auto_store is defined in util.c */
 
 static error_t h2fmi_device_get_info(device_t *_dev, device_info_t _info, void *_result, size_t _size)
 {

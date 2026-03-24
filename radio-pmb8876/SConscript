@@ -1,8 +1,0 @@
-Import("*")
-
-radio_pmb8876_src = env.Localize([
-	'radio.c'
-	])
-
-radio_pmb8876 = env.CreateModule('radio-pmb8876', radio_pmb8876_src)
-radio_pmb8876.Append(CPPPATH=[Dir('includes')])
