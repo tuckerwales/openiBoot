@@ -258,8 +258,6 @@ int uart_read(int ureg, char *buffer, uint32_t length, uint64_t timeout) {
 
 	uint64_t startTime = timer_get_system_microtime();
 	int written = 0;
-	uint32_t discard;
-
 	while(written < length) {
 		register int canRead = 0;
 		if(settings->fifo) {
@@ -271,7 +269,7 @@ int uart_read(int ureg, char *buffer, uint32_t length, uint64_t timeout) {
 
 		if(canRead) {
 			if(GET_REG(uart->UERSTAT)) {
-				discard = GET_REG(uart->URXH);
+				(void)GET_REG(uart->URXH); /* discard erroneous byte */
 			} else {
 				*buffer = GET_REG(uart->URXH);
 				written++;

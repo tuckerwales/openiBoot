@@ -1,3 +1,4 @@
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
 #include "openiboot.h"
 #include "util.h"
 #include "uart.h"

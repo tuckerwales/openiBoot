@@ -59,7 +59,7 @@ void uart_run(uint32_t _V) {
 			if (UartCommandBuffer[i] == '\n' || UartCommandBuffer[i] == '\r') {
 				EnterCriticalSection();
 				char *safeCommand = malloc(i+1);
-				memset(safeCommand, 0, sizeof(safeCommand));
+				memset(safeCommand, 0, i+1);
 				memcpy(safeCommand, UartCommandBuffer, i);
 				memset(UartCommandBuffer, 0, UartCommandBufferSize);
 				UartCommandBufferRead = 0;
@@ -306,16 +306,10 @@ int uart_set_sample_rate(int ureg, int rate) {
 	if(ureg >= NUM_UARTS)
 		return -1; // Invalid ureg
 
-	uint32_t newSampleRate;
 	switch(rate) {
 		case 4:
-			newSampleRate = UART_SAMPLERATE_4;
-			break;
 		case 8:
-			newSampleRate = UART_SAMPLERATE_8;
-			break;
 		case 16:
-			newSampleRate = UART_SAMPLERATE_16;
 			break;
 		default:
 			return -1; // Invalid sample rate
@@ -456,7 +450,6 @@ int uart_read(int ureg, char *buffer, uint32_t length, uint64_t timeout) {
 
 	uint64_t startTime = timer_get_system_microtime();
 	int written = 0;
-	uint32_t discard;
 
 	if (settings->mode == UART_POLL_MODE) {
 		while(written < length) {
@@ -470,7 +463,7 @@ int uart_read(int ureg, char *buffer, uint32_t length, uint64_t timeout) {
 
 			if(canRead) {
 				if(GET_REG(uart->UERSTAT)) {
-					discard = GET_REG(uart->URXH);
+					(void)GET_REG(uart->URXH); /* discard erroneous byte */
 				} else {
 					*buffer = GET_REG(uart->URXH);
 					written++;

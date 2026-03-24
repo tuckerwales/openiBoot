@@ -254,7 +254,7 @@ int radio_cmd(const char* cmd, int tries)
 
 static int radio_nvram_read_idx(int idx, char** res)
 {
-	char cmd[20];
+	char cmd[32];
 	char* curBuf;
 	char* resultStart;
 	int curBufSize;

@@ -189,8 +189,7 @@ void displayFolder(HFSCatalogNodeID folderID, Volume* volume) {
 	HFSPlusCatalogFolder* folder;
 	HFSPlusCatalogFile* file;
 	HFSPlusDecmpfs* compressData = NULL;
-	size_t attrSize;
-	
+
 	theList = list = getFolderContents(folderID, volume);
 	
 	while(list != NULL) {
@@ -208,7 +207,7 @@ void displayFolder(HFSCatalogNodeID folderID, Volume* volume) {
 			if(file->permissions.ownerFlags & UF_COMPRESSED) {
 				// strict-alignment / __atribute__((__packed__)) would fuck us here. Dirty workaround.
 				uint8_t* compressFu = NULL;
-				attrSize = getAttribute(volume, file->fileID, "com.apple.decmpfs", (uint8_t**)(&compressFu));
+				getAttribute(volume, file->fileID, "com.apple.decmpfs", (uint8_t**)(&compressFu));
 				compressData = (HFSPlusDecmpfs*)compressFu;
 //				attrSize = getAttribute(volume, file->fileID, "com.apple.decmpfs", (uint8_t**)(&compressData));
 				flipHFSPlusDecmpfs(compressData);

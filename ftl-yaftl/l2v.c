@@ -292,7 +292,10 @@ void L2V_Search(GCReadC* _c)
 							system_panic("_c->next_nOfs) <= c->nodeSize - sizeof(lPtr_t)\n");
 				}
 
-				if (Span == 0);
+	#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+			if (Span == 0);
+#pragma GCC diagnostic pop
 					system_panic("L2V_Search fail!!\r\n");
 
 				if (targTofs >= (Span + nextSpan))

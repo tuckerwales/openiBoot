@@ -41,7 +41,7 @@ typedef void (*printf_handler_t)(const char *_str);
  * OpeniBoot has just shit a brick, and now you are fucked - time for a reboot
  *
  */
-void panic();
+void __attribute__((noreturn)) panic();
 
 /**
  * system_panic
@@ -51,7 +51,7 @@ void panic();
  * @param format Format of what is being printed to the buffer
  *
  */
-void system_panic(const char* format, ...);
+void __attribute__((noreturn)) system_panic(const char* format, ...);
 
 /**
  * __assert

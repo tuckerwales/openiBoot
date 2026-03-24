@@ -196,6 +196,8 @@ int dma_perform(uint32_t Source, uint32_t Destination, int size, int continueLis
 	uint32_t sourceIncrement = 0;
 	uint32_t destinationIncrement = 0;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 	if(Source <= (sizeof(AddressLookupTable)/sizeof(uint32_t))) {
 		if(Destination <= (sizeof(AddressLookupTable)/sizeof(uint32_t))) {
 			SET_REG(regSrcAddress, AddressLookupTable[Source]);
@@ -229,6 +231,7 @@ int dma_perform(uint32_t Source, uint32_t Destination, int size, int continueLis
 			destinationIncrement = 1 << DMAC0Control0_DESTINATIONINCREMENT;
 		}
 	}
+#pragma GCC diagnostic pop
 
 	if(!continueList) {
 		uint32_t src = GET_REG(regSrcAddress);

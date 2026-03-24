@@ -286,7 +286,10 @@ error_t task_sleep(int _ms)
 
 	//bufferPrintf("tasks: Putting task %p to sleep for %d ms.\n", task, _ms);
 	task_remove(task);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 	event_add(&task->sleepEvent, ticks, &task_wake_event, task);
+#pragma GCC diagnostic pop
 	SwapTask(next);
 
 	LeaveCriticalSection();

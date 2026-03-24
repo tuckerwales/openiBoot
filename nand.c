@@ -135,7 +135,7 @@ error_t nand_device_read_special_page(nand_device_t *_dev, uint32_t _ce, char _p
 				continue;
 			}
 
-			if(memcmp(buffer, _page, sizeof(_page)) == 0)
+			if(memcmp(buffer, _page, 16) == 0)
 			{
 				if(_buffer)
 				{

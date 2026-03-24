@@ -17,7 +17,7 @@ BUILD := build
 PLAT_FLAGS := \
 	-mlittle-endian -mfpu=vfp -mthumb -mthumb-interwork -fPIC -std=gnu11
 
-CFLAGS := $(PLAT_FLAGS) -nostdlib -Wall -O2 -fcommon \
+CFLAGS := $(PLAT_FLAGS) -nostdlib -Wall -Werror -O2 -fcommon \
 	-DOPENIBOOT_VERSION=$(VERSION) \
 	-DOPENIBOOT_VERSION_BUILD=$(GIT_COMMIT) \
 	-DCONFIG_ARM
@@ -420,6 +420,15 @@ $(1): $$($(1)_OUT).bin
 endif
 
 .PHONY: $(1)
+
+# Third-party files compiled without warnings
+$(BUILD)/$(1)/stb_image.o: stb_image.c
+	@mkdir -p $$(@D)
+	$(CC) $(filter-out -Wall -Werror,$(CFLAGS)) $(INCLUDES) $$($(1)_FLAGS) -w -MMD -MP -c -o $$@ $$<
+
+$(BUILD)/$(1)/malloc.o: malloc.c
+	@mkdir -p $$(@D)
+	$(CC) $(filter-out -Wall -Werror,$(CFLAGS)) $(INCLUDES) $$($(1)_FLAGS) -w -MMD -MP -c -o $$@ $$<
 
 # If this target includes installer.c, its object file needs the generated headers
 ifneq ($$(filter $(INSTALLER_SRC),$$($(1)_SRC)),)

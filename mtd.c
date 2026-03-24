@@ -205,9 +205,8 @@ mtd_t *mtd_find(mtd_t *_prev)
 
 error_t mtd_prepare(mtd_t *_mtd)
 {
-	int ret = 0;
 	if(_mtd->prepare_count == 0 && _mtd->prepare != NULL)
-		ret = _mtd->prepare(_mtd);
+		_mtd->prepare(_mtd);
 
 	_mtd->prepare_count++;
 	return SUCCESS;

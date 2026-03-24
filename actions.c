@@ -481,9 +481,12 @@ void boot_linux(const char* args, uint32_t mach_type) {
 		}
 	}
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
 	for(i = 0; i < (0x1000/sizeof(uint32_t)); i++) {
 		((uint32_t*)0x100)[i] = ((uint32_t*)param_at)[i];
 	}
+#pragma GCC diagnostic pop
 
 	asm (	"MOV	R4, %0\n"
 		"MOV	R0, #0\n"

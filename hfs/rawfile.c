@@ -292,7 +292,6 @@ int removeExtents(RawFile* rawFile) {
 	HFSPlusForkData* forkData;
 	uint32_t currentBlock;
 
-	uint32_t startBlock;
 	uint32_t blockCount;
 
 	HFSPlusExtentDescriptor* descriptor;
@@ -333,7 +332,6 @@ int removeExtents(RawFile* rawFile) {
 			}
 		}
 
-		startBlock = descriptor[currentExtent].startBlock;
 		blockCount = descriptor[currentExtent].blockCount;
 
 		currentBlock += blockCount;

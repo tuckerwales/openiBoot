@@ -233,8 +233,11 @@ static void vfl_checksum(void* data, int size, uint32_t* a, uint32_t* b)
 
 static int vfl_gen_checksum(vfl_vsvfl_device_t *_vfl, int ce)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 	vfl_checksum(&_vfl->contexts[ce], (uint32_t)&_vfl->contexts[ce].checksum1 - (uint32_t)&_vfl->contexts[ce],
 			&_vfl->contexts[ce].checksum1, &_vfl->contexts[ce].checksum2);
+#pragma GCC diagnostic pop
 	return TRUE;
 }
 
@@ -506,7 +509,7 @@ static error_t vsvfl_replace_bad_block(vfl_vsvfl_device_t *_vfl, uint32_t _ce, u
 		uint32_t reserved_blocks_per_bank = _vfl->geometry.blocks_per_bank - curVFLCxt->reserved_block_pool_start;
 		uint32_t bank = _ce + _vfl->geometry.num_ce * (i / reserved_blocks_per_bank);
 		uint32_t block_number = curVFLCxt->reserved_block_pool_start + (i % reserved_blocks_per_bank);
-		uint32_t pBlock;
+		uint32_t pBlock = 0;
 		virtual_block_to_physical_block(_vfl, bank, block_number, &pBlock);
 		_vfl->bbt[_ce][pBlock] &= ~(1 << (pBlock & 7));
 	}
@@ -560,7 +563,7 @@ static error_t vfl_vsvfl_erase_single_block(vfl_device_t *_vfl, uint32_t _vbn, i
 	// In order to erase a single virtual block, we have to erase the matching
 	// blocks across all banks.
 	for (bank = 0; bank < vfl->geometry.banks_total; bank++) {
-		uint32_t pBlock, pCE, blockRemapped;
+		uint32_t pBlock = 0, pCE, blockRemapped;
 
 		// Find the physical block before bad-block remapping.
 		virtual_block_to_physical_block(vfl, bank, _vbn, &pBlock);
@@ -601,7 +604,7 @@ static error_t vfl_vsvfl_erase_single_block(vfl_device_t *_vfl, uint32_t _vbn, i
 	uint32_t status = EINVAL;
 
 	for (bank = 0; bank < vfl->geometry.banks_total; bank++) {
-		uint32_t pBlock, pCE, tries;
+		uint32_t pBlock = 0, pCE, tries;
 
 		virtual_block_to_physical_block(vfl, bank, _vbn, &pBlock);
 		pCE = bank % vfl->geometry.num_ce;
@@ -666,10 +669,13 @@ static uint16_t* VFL_get_FTLCtrlBlock(vfl_device_t *_vfl)
 
 	vfl_vsvfl_context_t *cxt = get_most_updated_context(vfl);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 	if(cxt)
 		return cxt->control_block;
 	else
 		return NULL;
+#pragma GCC diagnostic pop
 }
 
 static inline error_t vfl_vsvfl_setup_geometry(vfl_vsvfl_device_t *_vfl)
@@ -1017,7 +1023,7 @@ static error_t vfl_vsvfl_open(vfl_device_t *_vfl, nand_device_t *_nand)
 		for(bank = 0; bank < banksPerCE; bank++) {
 			for(i = 0; i < num_non_reserved; i++) {
 				uint16_t mapEntry = vfl->contexts[ce].reserved_block_pool_map[bank * num_non_reserved + i];
-				uint32_t pBlock;
+				uint32_t pBlock = 0;
 
 				if(mapEntry == 0xFFF0)
 					continue;

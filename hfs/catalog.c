@@ -190,7 +190,10 @@ static int catalogCompareCS(BTKey* vLeft, BTKey* vRight) {
 	} else if(left->parentID > right->parentID) {
 		return 1;
 	} else {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 		return FastUnicodeCompare(left->nodeName.unicode, left->nodeName.length, right->nodeName.unicode, right->nodeName.length);
+#pragma GCC diagnostic pop
 	}
 }
 

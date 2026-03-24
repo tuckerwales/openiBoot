@@ -502,7 +502,6 @@ unsigned int images_read(Image* image, void** data) {
 		uint32_t dataOffset = 0;
 		uint32_t dataLength = 0;
 		uint32_t kbagOffset = 0;
-		uint32_t kbagLength = 0;
 		uint32_t offset = (uint32_t)(*data + sizeof(AppleImg3RootHeader));
 		while((offset - (uint32_t)(*data + sizeof(AppleImg3RootHeader))) < image->length) {
 			AppleImg3Header* header = (AppleImg3Header*) offset;
@@ -512,7 +511,6 @@ unsigned int images_read(Image* image, void** data) {
 			}
 			if(header->magic == IMG3_KBAG_MAGIC) {
 				kbagOffset = offset + sizeof(AppleImg3Header);
-				kbagLength = header->dataSize;
 			}
 			offset += header->size;
 		}
@@ -792,10 +790,8 @@ void* images_inject_img3(const void* img3Data, const void* newData, size_t newDa
 	uint8_t* IV = IVKey;
 	uint8_t* Key = &IVKey[16];
 
-	uint32_t dataOffset = 0;
 	uint32_t dataLength = 0;
 	uint32_t kbagOffset = 0;
-	uint32_t kbagLength = 0;
 	uint32_t offset = (uint32_t)(img3Data + sizeof(AppleImg3RootHeader));
 
 	size_t contentsLength = ((AppleImg3RootHeader*) img3Data)->base.dataSize;
@@ -803,12 +799,10 @@ void* images_inject_img3(const void* img3Data, const void* newData, size_t newDa
 	while((offset - (uint32_t)(img3Data + sizeof(AppleImg3RootHeader))) < contentsLength) {
 		AppleImg3Header* header = (AppleImg3Header*) offset;
 		if(header->magic == IMG3_DATA_MAGIC) {
-			dataOffset = offset + sizeof(AppleImg3Header);
 			dataLength = header->size;
 		}
 		if(header->magic == IMG3_KBAG_MAGIC) {
 			kbagOffset = offset + sizeof(AppleImg3Header);
-			kbagLength = header->dataSize;
 		}
 		offset += header->size;
 	}

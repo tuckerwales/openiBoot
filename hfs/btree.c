@@ -1042,8 +1042,6 @@ static int doAddRecord(BTree* tree, uint32_t root, BTKey* searchKey, size_t leng
 	BTNodeDescriptor* descriptor;
 	BTKey* key;
 	off_t recordOffset = 0;
-	off_t recordDataOffset = 0;
-	off_t lastRecordDataOffset = 0;
 
 	uint16_t offset;
 
@@ -1055,12 +1053,9 @@ static int doAddRecord(BTree* tree, uint32_t root, BTKey* searchKey, size_t leng
 	if(descriptor == NULL)
 		return FALSE;
 
-	lastRecordDataOffset = 0;
-
 	for(i = 0; i < descriptor->numRecords; i++) {
 		recordOffset = getRecordOffset(i, root, tree);
 		key = READ_KEY(tree, recordOffset, tree->io);
-		recordDataOffset = recordOffset + key->keyLength + sizeof(key->keyLength);
 
 		res = COMPARE(tree, key, searchKey);
 		if(res == 0) {
@@ -1075,8 +1070,6 @@ static int doAddRecord(BTree* tree, uint32_t root, BTKey* searchKey, size_t leng
 		}
 
 		free(key);
-
-		lastRecordDataOffset = recordDataOffset;
 	}
 
 	if(i != descriptor->numRecords) {

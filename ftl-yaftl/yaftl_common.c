@@ -91,7 +91,7 @@ void YAFTL_setupCleanSpare(SpareData* _spare_ptr)
 int YAFTL_readMultiPages(uint32_t* pagesArray, uint32_t nPages, uint8_t* dataBuffer, SpareData* metaBuffers, uint32_t disableAES, uint32_t scrub)
 {
 	uint32_t block, page, i, j;
-	int ret, succeeded, status = 0, unkn = 0;
+	int ret, succeeded, status = 0;
 	int pagesToRead = nPages;
 
 	if (metaBuffers == NULL)
@@ -145,7 +145,6 @@ int YAFTL_readMultiPages(uint32_t* pagesArray, uint32_t nPages, uint8_t* dataBuf
 	block = pagesArray[i * sGeometry.pagesPerSublk] / sGeometry.pagesPerSublk;
 	sInfo.blockArray[block].readCount++;
 
-	unkn = 0;
 	// ret = VFL_ReadScatteredPagesInVb(&buf[i * sGeometry.pagesPerSublk], pagesToRead % sGeometry.pagesPerSublk, databuffer + i * sGeometry.pagesPerSublk * sGeometry.bytesPerPage, metabuf_array, &unkn, 0, a4, &status);
 	ret = 0; // For now. --Oranav
 

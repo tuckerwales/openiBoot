@@ -648,10 +648,14 @@ void YAFTL_Flush()
 	// Replace all the blocks.
 	for (block = 0; block < sGeometry.numBlocks && found < 3; block++) {
 		// Must be a free block, with much better erase count.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wbool-compare"
+#pragma GCC diagnostic ignored "-Wlogical-not-parentheses"
 		if (!sInfo.blockArray[block].status == BLOCKSTATUS_FREE
-			|| sInfo.blockArray[block].eraseCount + 50 >=
-			   sInfo.blockArray[oldBlks[found]].eraseCount)
+				|| sInfo.blockArray[block].eraseCount + 50 >=
+				   sInfo.blockArray[oldBlks[found]].eraseCount)
 		{
+#pragma GCC diagnostic pop
 			continue;
 		}
 
@@ -2379,9 +2383,8 @@ error_t ftl_yaftl_open(ftl_device_t *_ftl, vfl_device_t *_vfl)
 error_t ftl_yaftl_read_single_page(ftl_device_t *_ftl, uint32_t _page, uint8_t *_buffer)
 {
 	uint32_t emf = h2fmi_get_emf();
-	if((&_ftl->mtd.bdev
-			&& (_ftl->mtd.bdev.part_mode == partitioning_gpt || _ftl->mtd.bdev.part_mode == partitioning_lwvm)
-				&& _ftl->mtd.bdev.handle->pIdx == 1)
+	if(((_ftl->mtd.bdev.part_mode == partitioning_gpt || _ftl->mtd.bdev.part_mode == partitioning_lwvm)
+			&& _ftl->mtd.bdev.handle->pIdx == 1)
 			|| emf) {
 		h2fmi_set_emf(1, _page);
 	}
@@ -2396,9 +2399,8 @@ error_t ftl_yaftl_read_single_page(ftl_device_t *_ftl, uint32_t _page, uint8_t *
 error_t ftl_yaftl_write_single_page(ftl_device_t *_ftl, uint32_t _page, uint8_t *_buffer)
 {
 	uint32_t emf = h2fmi_get_emf();
-	if((&_ftl->mtd.bdev
-			&& (_ftl->mtd.bdev.part_mode == partitioning_gpt || _ftl->mtd.bdev.part_mode == partitioning_lwvm)
-				&& _ftl->mtd.bdev.handle->pIdx == 1)
+	if(((_ftl->mtd.bdev.part_mode == partitioning_gpt || _ftl->mtd.bdev.part_mode == partitioning_lwvm)
+			&& _ftl->mtd.bdev.handle->pIdx == 1)
 			|| emf) {
 		h2fmi_set_emf(1, _page);
 	}

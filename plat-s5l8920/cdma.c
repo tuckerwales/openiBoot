@@ -48,6 +48,8 @@ typedef struct DMATxRxInfo {
 	uint32_t unkn4;
 } DMATxRxInfo;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-const-variable"
 static const DMATxRxInfo DMATxRx[8] = {
 	{3, 4, 0, 0, 0x80000020},
 	{3, 4, 0, 1, 0x800000A0},
@@ -58,6 +60,7 @@ static const DMATxRxInfo DMATxRx[8] = {
 	{5, 8, 1, 3, 0x81300014},
 	{5, 8, 1, 4, 0x81300018},
 };
+#pragma GCC diagnostic pop
 
 static DMAInfo dmaInfo[32];
 
@@ -479,7 +482,10 @@ uint32_t aes_hw_crypto_operation(uint32_t _arg0, uint32_t _channel, uint32_t *_b
 	SET_REG(DMA + channel_reg, 2);
 
 	aes_crypto[_channel].buffer = _buffer;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 	aes_crypto[_channel].unkn0 = &aes_crypto[_channel].unkn8;
+#pragma GCC diagnostic pop
 	aes_crypto[_channel].unkn1 = (_arg7 ? 0x30103 : 0x103);
 	aes_crypto[_channel].size = _size;
 	aes_crypto[_channel].unkn9 = 0;

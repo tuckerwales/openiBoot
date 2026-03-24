@@ -676,7 +676,7 @@ static int h2fmi_dma_wait(uint32_t _channel, uint32_t _timeout)
 
 	EnterCriticalSection();
 
-	h2fmi_dma_task_t *task = malloc(sizeof(task));
+	h2fmi_dma_task_t *task = malloc(sizeof(*task));
 	task->task = CurrentRunning;
 	task->list.next = &dma->list;
 	task->list.prev = dma->list.prev;

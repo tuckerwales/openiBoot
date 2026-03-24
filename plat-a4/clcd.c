@@ -102,6 +102,8 @@ static uint32_t atv_values[] = {
 	0xED3B8, 0xEE3BC, 0xEF3C0, 0xEF3C0
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-const-variable"
 static const PMURegisterData backlightOffData = {0x68, 0x0};
 
 static const PMURegisterData backlightData[] = {
@@ -109,6 +111,7 @@ static const PMURegisterData backlightData[] = {
 	{0x67, 0x0},
 	{0x68, 0x15}
 };
+#pragma GCC diagnostic pop
 
 volatile uint32_t* CurFramebuffer;
 
@@ -309,6 +312,8 @@ int displaypipe_init() {
 		uint32_t some_value = GET_REG(RGBOUT + 0x54);
 		SET_REG(RGBOUT + 0x54, some_value & 0xFFFE0F00);
 		uint32_t i;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 		for (i = 0; i <= 0x100; i++) {
 			SET_REG(RGBOUT + 0x54, i | some_value | 0x14000);
 			SET_REG(RGBOUT + 0x58, atv_values[i] & 0xFFFFF);
@@ -321,6 +326,7 @@ int displaypipe_init() {
 			SET_REG(RGBOUT + 0x54, i | some_value | 0x16000);
 			SET_REG(RGBOUT + 0x58, atv_values[i] & 0xFFFFF);
 		}
+#pragma GCC diagnostic pop
 		SET_REG(RGBOUT + 0x4C, 9);
 	}
 

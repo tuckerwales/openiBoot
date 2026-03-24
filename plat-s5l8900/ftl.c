@@ -1225,7 +1225,7 @@ static int FTL_Restore() {
 			int newMCSeq = determine_block_type(candidate, &candidateUSN);
 
 			uint16_t newLCandidate;
-			uint32_t newLCandidateUSN;
+			uint32_t newLCandidateUSN = 0;
 
 			if(origMCSeq && newMCSeq)
 			{
@@ -1304,6 +1304,8 @@ static int FTL_Restore() {
 		pawMapTable[block] = mapCandidate;
 		blockMap[mapCandidate] = 0;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 		if(logCandidate != 0xFFFF)
 		{
 			pLog[numLogs].wLbn = block;
@@ -1312,7 +1314,8 @@ static int FTL_Restore() {
 
 			blockMap[logCandidate] = 0;
 		}
-	}	
+#pragma GCC diagnostic pop
+	}
 
 	// Step three
 	// At this point, pawMapTable ought to be correct. We can also assert that all blocks that were originally
@@ -1376,8 +1379,6 @@ static int FTL_Restore() {
 		int bSequential = 1;
 		uint32_t aHighestUSN = 0;
 		uint32_t bHighestUSN = 0;
-		uint32_t* mapBlockUSN;
-		uint32_t* mapBlockLPN;
 		uint32_t* logBlockUSN;
 		uint32_t* logBlockLPN;
 		int page;
@@ -1425,9 +1426,7 @@ static int FTL_Restore() {
 		{
 			pLog[i].wVbn = blockB;
 			pawMapTable[pLog[i].wLbn] = blockA;
-			mapBlockUSN = usnA;
-			logBlockUSN = usnB;
-			mapBlockLPN = lpnA;
+				logBlockUSN = usnB;
 			logBlockLPN = lpnB;
 			if(bHighestUSN > highest_usn)
 				highest_usn = bHighestUSN;
@@ -1435,9 +1434,7 @@ static int FTL_Restore() {
 		{
 			pLog[i].wVbn = blockA;
 			pawMapTable[pLog[i].wLbn] = blockB;
-			mapBlockUSN = usnB;
-			logBlockUSN = usnA;
-			mapBlockLPN = lpnB;
+				logBlockUSN = usnA;
 			logBlockLPN = lpnA;
 			if(aHighestUSN > highest_usn)
 				highest_usn = aHighestUSN;
@@ -1524,7 +1521,7 @@ static int FTL_GetStruct(FTLStruct type, void** data, int* size) {
 	}
 }
 
-static int VFL_GetStruct(FTLStruct type, void** data, int* size) {
+static int VFL_GetStruct(VFLStruct type, void** data, int* size) {
 	switch(type) {
 		case VFLData1SID:
 			*data = &VFLData1;

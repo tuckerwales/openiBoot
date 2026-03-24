@@ -134,7 +134,7 @@ error_t block_device_setup(block_device_t *_bdev)
 					}
 					LwVMPartitionRecord *record = &_bdev->lwvm.partitions[i];
 					char *string = malloc(sizeof(record->partitionName)/2);
-					memset(string, 0, sizeof(string));
+					memset(string, 0, sizeof(record->partitionName)/2);
 					for (j = 0; record->partitionName[j*2] != 0; j++) {
 						string[j] = record->partitionName[j*2];
 					}
