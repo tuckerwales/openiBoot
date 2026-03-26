@@ -49,7 +49,7 @@ MK8900_LIBS_Linux_x86_64 := mk8900image/x86_64/libxpwn.a mk8900image/x86_64/libc
 MK8900_LIBS_Linux       := mk8900image/x86/libxpwn.a mk8900image/x86/libcommon.a
 MK8900_LIBS := $(or $(MK8900_LIBS_$(UNAME_S)_$(UNAME_M)),$(MK8900_LIBS_$(UNAME_S)))
 $(MK8900IMG): mk8900image/mk8900image.c $(MK8900_LIBS)
-	$(HOST_CC) -o $@ $< $(MK8900_LIBS) -L/usr/X11/lib -lm -ldl -lpng -lcrypto -lz
+	$(HOST_CC) -no-pie -o $@ $< $(MK8900_LIBS) -L/usr/X11/lib -lm -ldl -lpng -lcrypto -lz
 endif
 
 # ── Source groups ─────────────────────────────────────────────────────────────
