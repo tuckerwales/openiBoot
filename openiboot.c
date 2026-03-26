@@ -47,11 +47,14 @@ void OpenIBootStart()
 	platform_init();
 	init_setup();
 
+	bufferPrintf("boot: init_boot_modules\r\n");
 	OpenIBootMain = &OpenIBootConsole;
 	init_boot_modules();
 
+	bufferPrintf("boot: calling OpenIBootMain\r\n");
 	OpenIBootMain();
 
+	bufferPrintf("boot: tasks_run\r\n");
 	tasks_run(); // Runs forever.
 }
 

@@ -121,7 +121,7 @@ CallArm:
 
 .code 32
 
-
+.type CallThumb, %function
 CallThumb:
 	BX	R0
 
@@ -129,24 +129,28 @@ CallThumb:
 @	FIQ/IRQ Control
 @
 
+.type EnableCPUIRQ, %function
 EnableCPUIRQ:
 	MRS	R0, CPSR
 	BIC	R0, R0,	#ARM11_CPSR_IRQDISABLE
 	MSR	CPSR_c,	R0
 	BX	LR
 
+.type EnableCPUFIQ, %function
 EnableCPUFIQ:
 	MRS	R0, CPSR
 	BIC	R0, R0,	#ARM11_CPSR_FIQDISABLE
 	MSR	CPSR_c,	R0
 	BX	LR
 
+.type DisableCPUIRQ, %function
 DisableCPUIRQ:
 	MRS	R0, CPSR
 	ORR	R0, R0,	#ARM11_CPSR_IRQDISABLE
 	MSR	CPSR_c,	R0
 	BX	LR
 
+.type DisableCPUFIQ, %function
 DisableCPUFIQ:
 	MRS	R0, CPSR
 	ORR	R0, R0,	#ARM11_CPSR_FIQDISABLE
@@ -157,38 +161,47 @@ DisableCPUFIQ:
 @	Coprocessor manipulation
 @
 
+.type ReadControlRegisterConfigData, %function
 ReadControlRegisterConfigData:
 	MRC	p15, 0,	R0, c1, c0, 0
 	BX	LR
 
+.type WriteControlRegisterConfigData, %function
 WriteControlRegisterConfigData:
 	MCR	p15, 0,	R0, c1, c0, 0
 	BX	LR
 
+.type ReadAuxiliaryControlRegister, %function
 ReadAuxiliaryControlRegister:
 	MRC	p15, 0,	R0, c1, c0, 1
 	BX	LR
 
+.type WriteAuxiliaryControlRegister, %function
 WriteAuxiliaryControlRegister:
 	MCR	p15, 0,	R0, c1, c0, 1
 	BX	LR
 
+.type WriteDomainAccessControlRegister, %function
 WriteDomainAccessControlRegister:
 	MCR	p15, 0,	R0, c3, c0
 	BX	LR
 
+.type ReadDataFaultStatusRegister, %function
 ReadDataFaultStatusRegister:
 	MRC	p15, 0,	R0, c5, c0, 1
 	BX	LR
 
+.type ReadFaultAddressRegister, %function
 ReadFaultAddressRegister:
 	MRC	p15, 0,	R0, c6, c0, 1
 	BX	LR
 
+.type WritePeripheralPortMemoryRemapRegister, %function
 WritePeripheralPortMemoryRemapRegister:
 	MCR	p15, 0,	R0, c15, c2, 4
 	BX	LR
 
+.type GiveFullAccessCP10CP11, %function
 GiveFullAccessCP10CP11:
 	MRC	p15, 0,	R0, c1, c0, 2
 	MOV	R1, #(ARM11_AccessControl_CP10_ALL | ARM11_AccessControl_CP11_ALL)
@@ -196,12 +209,14 @@ GiveFullAccessCP10CP11:
 	MCR	p15, 0,	R0, c1, c0, 2
 	BX	LR
 
+.type EnableVFP, %function
 EnableVFP:					@ FIXME: Not working yet without VFP
 	FMRX	R2, FPEXC
 	ORR	R2, R2,	ARM11_VFP_Enable
 	FMXR	FPEXC, R2
 	BX	LR
 
+.type WaitForInterrupt, %function
 WaitForInterrupt:
 #ifdef ARM11
 	MOV	R0, #0
@@ -217,14 +232,17 @@ WaitForInterrupt:
 @	MMU management
 @
 
+.type WriteTranslationTableBaseRegister0, %function
 WriteTranslationTableBaseRegister0:
 	MCR	p15, 0,	R0, c2, c0
 	BX LR
 
+.type ReadTranslationTableBaseRegister0, %function
 ReadTranslationTableBaseRegister0:
 	MRC	p15, 0,	R0, c2, c0
 	BX LR
 
+.type InvalidateUnifiedTLBUnlockedEntries, %function
 InvalidateUnifiedTLBUnlockedEntries:
 	MOV	R0, #0
 	MCR	p15, 0,	R0, c8, c7
@@ -234,11 +252,13 @@ InvalidateUnifiedTLBUnlockedEntries:
 @	Cache management
 @
 
+.type DataSynchronizationBarrier, %function
 DataSynchronizationBarrier:
 	MOV	R0, #0
 	MCR	p15, 0,	R0, c7, c10, 4	@ Data synchronization barrier
 	BX	LR
 
+.type ClearCPUInstructionCache, %function
 ClearCPUInstructionCache:
 	MOV	R0, #0
 	MCR	p15, 0,	R0, c7, c5
@@ -248,18 +268,22 @@ ClearCPUInstructionCache:
 	NOP
 	BX	LR
 
+.type CleanDataCacheLineMVA, %function
 CleanDataCacheLineMVA:
 	MCR	p15, 0,	R0, c7, c10, 1
 	BX	LR
 
+.type InvalidateDataCacheLineMVA, %function
 InvalidateDataCacheLineMVA:
 	MCR	p15, 0, R0, c7, c6, 1
 	BX	LR
 
+.type CleanAndInvalidateDataCacheLineMVA, %function
 CleanAndInvalidateDataCacheLineMVA:
 	MCR	p15, 0, R0, c7, c14, 1
 	BX	LR
 
+.type CleanCPUDataCache, %function
 CleanCPUDataCache:
 #ifdef ARM11
 	MOV	R0, #0
@@ -283,6 +307,7 @@ CleanCPUDataCache_2:
 	MCR	p15, 0,	R0, c7, c10, 4	@ Data synchronization barrier
 	BX	LR
 
+.type InvalidateCPUDataCache, %function
 InvalidateCPUDataCache:
 #ifdef ARM11
 	MOV	R0, #0
@@ -305,6 +330,7 @@ InvalidateCPUDataCache_2:
 
 	BX	LR
 
+.type CleanAndInvalidateCPUDataCache, %function
 CleanAndInvalidateCPUDataCache:
 #ifdef ARM11
 	MOV	R0, #0
@@ -329,6 +355,7 @@ CleanAndInvalidateCPUDataCache_2:
 	MCR	p15, 0,	R0, c7, c10, 4	@ Data synchronization barrier
 	BX	LR
 
+.type ClearCPUCaches, %function
 ClearCPUCaches:
 	STMFD	SP!, {LR}
 	BL	CleanCPUDataCache
@@ -339,15 +366,18 @@ ClearCPUCaches:
 // These two are used by the 3GS,
 // clearly for demonic purposes. -- Ricky26
 .global GetC9C012
+.type GetC9C012, %function
 GetC9C012:
 	MRC p15, 1, R0, c9, c0, 2
 	BX LR
 
 .global SetC9C012
+.type SetC9C012, %function
 SetC9C012:
 	MCR p15, 1, R0, c9, c0, 2
 	BX LR
 
+.type Reboot, %function
 Reboot:
 #if defined(CONFIG_S5L8900) || defined(CONFIG_S5L8720)
 	LDR	R0, =WDT_CTRL
@@ -392,6 +422,7 @@ Reboot:
 @ Tasks
 @
 
+.type SwapTask, %function
 SwapTask:
 	@ Store current stuff
 	LDR R1, =CurrentRunning
@@ -428,6 +459,7 @@ SwapTask:
 
 .global task_run
 
+.type StartTask, %function
 StartTask:
 	@ R4 = Task PTR
 	@ R5 = Argument
@@ -442,6 +474,7 @@ StartTask:
 
 	B Reboot
 
+.type EndlessLoop, %function
 EndlessLoop:
 	B	EndlessLoop
 

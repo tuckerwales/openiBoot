@@ -15,9 +15,9 @@ BUILD := build
 # ── ARM compiler flags ────────────────────────────────────────────────────────
 
 PLAT_FLAGS := \
-	-mlittle-endian -mfpu=vfp -mthumb -mthumb-interwork -fPIC -std=gnu11
+	-mlittle-endian -mfpu=vfp -mthumb -mthumb-interwork -std=gnu11
 
-CFLAGS := $(PLAT_FLAGS) -nostdlib -Wall -O2 -fcommon \
+CFLAGS := $(PLAT_FLAGS) -nostdlib -Wall -O1 -fcommon \
 	-DOPENIBOOT_VERSION=$(VERSION) \
 	-DOPENIBOOT_VERSION_BUILD=$(GIT_COMMIT) \
 	-DCONFIG_ARM

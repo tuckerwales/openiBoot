@@ -112,7 +112,7 @@ typedef void (*EventHandler)(Event* event, void* opaque);
 typedef struct LinkedList {
 	void* prev;
 	void* next;
-} __attribute__ ((packed)) LinkedList;
+} LinkedList;
 
 typedef struct TaskRegisterState {
 	uint32_t	r4;
@@ -125,7 +125,7 @@ typedef struct TaskRegisterState {
 	uint32_t	r11;
 	uint32_t	sp;
 	uint32_t	lr;
-} __attribute__ ((packed)) TaskRegisterState;
+} TaskRegisterState;
 
 typedef enum TaskState {
 	TASK_READY = 1,
@@ -163,7 +163,7 @@ typedef struct TaskDescriptor {
 	uint32_t		identifier2;
 
 	uint32_t		wasWoken;
-} __attribute__ ((packed)) TaskDescriptor;
+} TaskDescriptor;
 
 extern TaskDescriptor* CurrentRunning;
 

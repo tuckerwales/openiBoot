@@ -85,6 +85,8 @@ static void task_remove(TaskDescriptor *_t)
 
 void tasks_setup()
 {
+	CurrentRunning = &bootstrapTask;
+
 	task_init(&bootstrapTask, "bootstrap", 0);
 	bootstrapTask.state = TASK_RUNNING;
 
@@ -93,7 +95,6 @@ void tasks_setup()
 
 	IRQTask = &irqTask;
 	IRQBackupTask = NULL;
-	CurrentRunning = &bootstrapTask;
 }
 
 void task_init(TaskDescriptor *_td, char *_name, size_t _stackSize)

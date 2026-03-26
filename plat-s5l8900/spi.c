@@ -16,8 +16,6 @@ static const SPIRegister SPIRegs[NUM_SPIPORTS] = {
 
 static SPIInfo spi_info[NUM_SPIPORTS];
 
-static void spiIRQHandler(uint32_t port);
-
 int spi_setup() {
 	clock_gate_switch(SPI0_CLOCKGATE, ON);
 	clock_gate_switch(SPI1_CLOCKGATE, ON);
@@ -31,12 +29,7 @@ int spi_setup() {
 		SET_REG(SPIRegs[i].control, 0);
 	}
 
-	interrupt_install(SPI0_IRQ, spiIRQHandler, 0);
-	interrupt_install(SPI1_IRQ, spiIRQHandler, 1);
-	interrupt_install(SPI2_IRQ, spiIRQHandler, 2);
-	interrupt_enable(SPI0_IRQ);
-	interrupt_enable(SPI1_IRQ);
-	interrupt_enable(SPI2_IRQ);
+	// No interrupt setup — using polled I/O
 
 	return 0;
 }
@@ -125,28 +118,39 @@ int spi_tx(int port, const uint8_t* buffer, int len, int block, int unknown) {
 	SET_REG(SPIRegs[port].control, GET_REG(SPIRegs[port].control) | (1 << 2));
 	SET_REG(SPIRegs[port].control, GET_REG(SPIRegs[port].control) | (1 << 3));
 
-	spi_info[port].txBuffer = buffer;
-
+	int txCurrentLen;
 	if(len > MAX_TX_BUFFER)
-		spi_info[port].txCurrentLen = MAX_TX_BUFFER;
+		txCurrentLen = MAX_TX_BUFFER;
 	else
-		spi_info[port].txCurrentLen = len;
-
-	spi_info[port].txTotalLen = len;
-	spi_info[port].txDone = FALSE;
+		txCurrentLen = len;
 
 	if(unknown == 0) {
 		SET_REG(SPIRegs[port].cnt, 0);
 	}
 
-	spi_txdata(port, buffer, 0, spi_info[port].txCurrentLen);
+	spi_txdata(port, buffer, 0, txCurrentLen);
 
 	SET_REG(SPIRegs[port].control, 1);
 
 	if(block) {
-		while(!spi_info[port].txDone || GET_BITS(GET_REG(SPIRegs[port].status), 4, 4) != 0) {
-			// yield
+		// Polled TX: feed remaining data as FIFO drains
+		while(txCurrentLen < len) {
+			uint32_t status = GET_REG(SPIRegs[port].status);
+			if(status & (1 << 1)) {
+				int toTX = len - txCurrentLen;
+				int canTX = (MAX_TX_BUFFER - GET_BITS(status, 4, 4)) << spi_info[port].wordSize;
+				if(toTX > canTX)
+					toTX = canTX;
+				spi_txdata(port, buffer, txCurrentLen, txCurrentLen + toTX);
+				txCurrentLen += toTX;
+				SET_REG(SPIRegs[port].status, status);
+			}
 		}
+		// Wait for TX FIFO to fully drain
+		while(GET_BITS(GET_REG(SPIRegs[port].status), 4, 4) != 0) {
+		}
+		// Clear any pending status
+		SET_REG(SPIRegs[port].status, GET_REG(SPIRegs[port].status));
 		return len;
 	} else {
 		return 0;
@@ -161,12 +165,6 @@ int spi_rx(int port, uint8_t* buffer, int len, int block, int noTransmitJunk) {
 	SET_REG(SPIRegs[port].control, GET_REG(SPIRegs[port].control) | (1 << 2));
 	SET_REG(SPIRegs[port].control, GET_REG(SPIRegs[port].control) | (1 << 3));
 
-	spi_info[port].rxBuffer = buffer;
-	spi_info[port].rxDone = FALSE;
-	spi_info[port].rxCurrentLen = 0;
-	spi_info[port].rxTotalLen = len;
-	spi_info[port].counter = 0;
-
 	if(noTransmitJunk == 0) {
 		SET_REG(SPIRegs[port].setup, GET_REG(SPIRegs[port].setup) | 1);
 	}
@@ -175,23 +173,34 @@ int spi_rx(int port, uint8_t* buffer, int len, int block, int noTransmitJunk) {
 	SET_REG(SPIRegs[port].control, 1);
 
 	if(block) {
+		int rxCurrentLen = 0;
 		uint64_t startTime = timer_get_system_microtime();
-		while(!spi_info[port].rxDone) {
-			// yield
+
+		// Polled RX: read data as it arrives in FIFO
+		while(rxCurrentLen < len) {
+			uint32_t status = GET_REG(SPIRegs[port].status);
+			int canRX = GET_BITS(status, 8, 4) << spi_info[port].wordSize;
+			if(canRX > 0) {
+				int toRX = len - rxCurrentLen;
+				if(toRX > canRX)
+					toRX = canRX;
+				spi_rxdata(port, buffer, rxCurrentLen, rxCurrentLen + toRX);
+				rxCurrentLen += toRX;
+				SET_REG(SPIRegs[port].status, status);
+			}
 			if(has_elapsed(startTime, 1000)) {
-				EnterCriticalSection();
-				spi_info[port].rxDone = TRUE;
-				spi_info[port].rxBuffer = NULL;
-				LeaveCriticalSection();
 				if(noTransmitJunk == 0) {
 					SET_REG(SPIRegs[port].setup, GET_REG(SPIRegs[port].setup) & ~1);
 				}
 				return -1;
 			}
 		}
+
 		if(noTransmitJunk == 0) {
 			SET_REG(SPIRegs[port].setup, GET_REG(SPIRegs[port].setup) & ~1);
 		}
+		// Clear any pending status
+		SET_REG(SPIRegs[port].status, GET_REG(SPIRegs[port].status));
 		return len;
 	} else {
 		return 0;
@@ -207,31 +216,59 @@ int spi_txrx(int port, const uint8_t* outBuffer, int outLen, uint8_t* inBuffer, 
 	SET_REG(SPIRegs[port].control, GET_REG(SPIRegs[port].control) | (1 << 2));
 	SET_REG(SPIRegs[port].control, GET_REG(SPIRegs[port].control) | (1 << 3));
 
-	spi_info[port].txBuffer = outBuffer;
-
+	int txCurrentLen;
 	if(outLen > MAX_TX_BUFFER)
-		spi_info[port].txCurrentLen = MAX_TX_BUFFER;
+		txCurrentLen = MAX_TX_BUFFER;
 	else
-		spi_info[port].txCurrentLen = outLen;
+		txCurrentLen = outLen;
 
-	spi_info[port].txTotalLen = outLen;
-	spi_info[port].txDone = FALSE;
-
-	spi_info[port].rxBuffer = inBuffer;
-	spi_info[port].rxDone = FALSE;
-	spi_info[port].rxCurrentLen = 0;
-	spi_info[port].rxTotalLen = inLen;
-	spi_info[port].counter = 0;
-
-	spi_txdata(port, outBuffer, 0, spi_info[port].txCurrentLen);
+	spi_txdata(port, outBuffer, 0, txCurrentLen);
 
 	SET_REG(SPIRegs[port].cnt, (inLen + ((1<<spi_info[port].wordSize)-1)) >> spi_info[port].wordSize);
 	SET_REG(SPIRegs[port].control, 1);
 
 	if(block) {
-		while(!spi_info[port].txDone || !spi_info[port].rxDone || GET_BITS(GET_REG(SPIRegs[port].status), 4, 4) != 0) {
-			// yield
+		int txDone = (txCurrentLen >= outLen) ? TRUE : FALSE;
+		int rxCurrentLen = 0;
+
+		// Polled TX+RX
+		while(!txDone || rxCurrentLen < inLen) {
+			uint32_t status = GET_REG(SPIRegs[port].status);
+
+			// Handle TX
+			if(!txDone && (status & (1 << 1))) {
+				if(txCurrentLen < outLen) {
+					int toTX = outLen - txCurrentLen;
+					int canTX = (MAX_TX_BUFFER - GET_BITS(status, 4, 4)) << spi_info[port].wordSize;
+					if(toTX > canTX)
+						toTX = canTX;
+					spi_txdata(port, outBuffer, txCurrentLen, txCurrentLen + toTX);
+					txCurrentLen += toTX;
+				}
+				if(txCurrentLen >= outLen)
+					txDone = TRUE;
+			}
+
+			// Handle RX
+			if(rxCurrentLen < inLen) {
+				int canRX = GET_BITS(status, 8, 4) << spi_info[port].wordSize;
+				if(canRX > 0) {
+					int toRX = inLen - rxCurrentLen;
+					if(toRX > canRX)
+						toRX = canRX;
+					spi_rxdata(port, inBuffer, rxCurrentLen, rxCurrentLen + toRX);
+					rxCurrentLen += toRX;
+				}
+			}
+
+			SET_REG(SPIRegs[port].status, status);
 		}
+
+		// Wait for TX FIFO to drain
+		while(GET_BITS(GET_REG(SPIRegs[port].status), 4, 4) != 0) {
+		}
+		// Clear any pending status
+		SET_REG(SPIRegs[port].status, GET_REG(SPIRegs[port].status));
 		return inLen;
 	} else {
 		return 0;
@@ -283,7 +320,7 @@ void spi_set_baud(int port, int baud, SPIWordSize wordSize, int isMaster, int is
 	if(divider > MAX_DIVIDER) {
 		return;
 	}
-	
+
 	SET_REG(SPIRegs[port].clkDivider, divider);
 	spi_info[port].baud = baud;
 	spi_info[port].isMaster = isMaster;
@@ -300,66 +337,3 @@ void spi_set_baud(int port, int baud, SPIWordSize wordSize, int isMaster, int is
 	SET_REG(SPIRegs[port].control, 1);
 
 }
-
-static void spiIRQHandler(uint32_t port) {
-	if(port > (NUM_SPIPORTS - 1)) {
-		return;
-	}
-
-	uint32_t status = GET_REG(SPIRegs[port].status);
-	if(status & (1 << 3)) {
-		spi_info[port].counter++;
-	}
-
-	if(status & (1 << 1)) {
-		while(TRUE) {
-			// take care of tx
-			if(spi_info[port].txBuffer != NULL) {
-				if(spi_info[port].txCurrentLen < spi_info[port].txTotalLen)
-				{
-					int toTX = spi_info[port].txTotalLen - spi_info[port].txCurrentLen;
-					int canTX = (MAX_TX_BUFFER - TX_BUFFER_LEFT(status)) << spi_info[port].wordSize;
-
-					if(toTX > canTX)
-						toTX = canTX;
-
-					spi_txdata(port, spi_info[port].txBuffer, spi_info[port].txCurrentLen, spi_info[port].txCurrentLen+toTX);
-					spi_info[port].txCurrentLen += toTX;
-
-				} else {
-					spi_info[port].txDone = TRUE;
-					spi_info[port].txBuffer = NULL;
-				}
-			}
-
-dorx:
-			// take care of rx
-			if(spi_info[port].rxBuffer == NULL)
-				break;
-
-			int toRX = spi_info[port].rxTotalLen - spi_info[port].rxCurrentLen;
-			int canRX = GET_BITS(status, 8, 4) << spi_info[port].wordSize;
-
-			if(toRX > canRX)
-				toRX = canRX;
-
-			spi_rxdata(port, spi_info[port].rxBuffer, spi_info[port].rxCurrentLen, spi_info[port].rxCurrentLen+toRX);
-			spi_info[port].rxCurrentLen += toRX;
-
-			if(spi_info[port].rxCurrentLen < spi_info[port].rxTotalLen)
-				break;
-
-			spi_info[port].rxDone = TRUE;
-			spi_info[port].rxBuffer = NULL;
-		}
-
-
-	} else  if(status & (1 << 0)) {
-		// jump into middle of the loop to handle rx only, stupidly
-		goto dorx;
-	}
-
-	// acknowledge interrupt handling complete
-	SET_REG(SPIRegs[port].status, status);
-}
-

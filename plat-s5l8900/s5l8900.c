@@ -58,8 +58,6 @@ void platform_init()
 	lcd_setup();
 	framebuffer_setup();
 
-	audiohw_init();
-
 	framebuffer_setdisplaytext(TRUE);
 }
 

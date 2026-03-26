@@ -51,12 +51,6 @@ int dma_setup() {
 	clock_gate_switch(DMAC0_CLOCKGATE, ON);
 	clock_gate_switch(DMAC1_CLOCKGATE, ON);
 
-	interrupt_install(DMAC0_INTERRUPT, dmaIRQHandler, 1);
-	interrupt_install(DMAC1_INTERRUPT, dmaIRQHandler, 2);
-
-	interrupt_enable(DMAC0_INTERRUPT);
-	interrupt_enable(DMAC1_INTERRUPT);
-
 	return 0;
 }
 
@@ -294,12 +288,27 @@ int dma_perform(uint32_t Source, uint32_t Destination, int size, int continueLis
 }
 
 int dma_finish(int controller, int channel, int timeout) {
+	uint32_t intTCStatusReg;
+	uint32_t intTCClearReg;
+
+	if(controller == 1) {
+		intTCStatusReg = DMAC0 + DMACIntTCStatus;
+		intTCClearReg = DMAC0 + DMACIntTCClear;
+	} else {
+		intTCStatusReg = DMAC1 + DMACIntTCStatus;
+		intTCClearReg = DMAC1 + DMACIntTCClear;
+	}
+
 	uint64_t startTime = timer_get_system_microtime();
-	while(!requests[controller - 1][channel].done) {
+	while(!(GET_REG(intTCStatusReg) & (1 << channel))) {
 		if(has_elapsed(startTime, timeout * 1000)) {
 			return -1;
 		}
 	}
+
+	// Clear the TC status and dispatch
+	SET_REG(intTCClearReg, 1 << channel);
+	dispatchRequest(&requests[controller - 1][channel], controller, channel);
 
 	EnterCriticalSection();
 	requests[controller - 1][channel].started = FALSE;
