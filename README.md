@@ -1,87 +1,148 @@
-iDroid Project openiBoot
----------------------------------------------------
-	Copyright (C) 2008 David Wang (planetbeing).
+# openiBoot
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+An open-source bootloader for Apple's ARM-based devices (iPhone, iPod touch, iPad, Apple TV). Originally developed by the [iDroid Project](https://www.idroidproject.org/) to boot alternative operating systems (Android, Linux) on early Apple hardware.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+## Supported Devices
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+| Device | SoC | CPU | Status |
+|---|---|---|---|
+| iPhone 2G | S5L8900 | ARM1176JZF-S | Stable |
+| iPhone 3G | S5L8900 | ARM1176JZF-S | Stable |
+| iPod Touch 1G | S5L8900 | ARM1176JZF-S | Stable |
+| iPod Touch 2G | S5L8720 | ARM1176JZF-S | Stable |
+| iPhone 3GS | S5L8920 | Cortex-A8 | Experimental |
+| iPhone 4 | A4 | Cortex-A8 | Experimental |
+| iPad 1G | A4 | Cortex-A8 | Experimental |
+| iPod Touch 4G | A4 | Cortex-A8 | Experimental |
+| Apple TV 2G | A4 | Cortex-A8 | Experimental |
 
-NOTE: Version 0.3 and above will not boot iDroid 2.6.32 series kernels without additional parameters being passed to the kernel.
+## Building
 
-Warning
----------------------------------------------------
-IT IS STRONGLY ADVISED THAT YOU DO NOT ATTEMPT TO RUN NAND WRITE FUNCTIONS IN THE A4 VERSION AT THIS POINT IN TIME.
+### Prerequisites
 
-DOING SO WILL INEVITABLY CAUSE YOU TO NEED TO RESTORE YOUR DEVICE, MAY LEAVE PERMANENT NAND BLOCK DAMAGE AND MAY ALSO CAUSE GREMLINS TO CRAWL OUT OF YOUR ARSE.
+- **ARM cross-compiler:** `arm-none-eabi-gcc` must be on your PATH.
+  - macOS: Install [Arm GNU Toolchain](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) or `brew install --cask gcc-arm-embedded`
+  - Linux: `sudo apt install gcc-arm-none-eabi` (Debian/Ubuntu) or download from Arm
+- **GNU Make**
 
-(If you read this warning properly, really unless you know wtf you are looking at - leave it alone until we stablise it)
+### Build a target
 
-Compiling
----------------------------------------------------
-To run openiboot from recovery mode (a.k.a iboot), you’ll need to create an img3 image.
-To run openiboot from DFU mode, you'll need to create a bin.
+```sh
+make iPhone3G
+```
 
-You will need `arm-none-eabi-gcc` on your PATH (e.g. install `gcc-arm-embedded` via Homebrew on macOS).
+Available targets:
 
-Change into the openiboot subfolder
+| SoC | Release | Debug | Installer |
+|---|---|---|---|
+| S5L8900 | `iPhone2G` `iPhone3G` `iPodTouch1G` | `iPhone2GD` `iPhone3GD` `iPodTouch1GD` | `iPhone2G-Installer` `iPhone3G-Installer` `iPodTouch1G-Installer` |
+| S5L8720 | `iPodTouch2G` | `iPodTouch2GD` | |
+| S5L8920 | `iPhone3GS` | `iPhone3GSD` | |
+| A4 | `iPhone4` `iPad1G` `iPodTouch4G` `aTV2G` | `iPhone4D` `iPad1GD` `iPodTouch4GD` `aTV2GD` | |
 
-**For iPod Touch 1G, run:**
-`make iPodTouch1G`
+Debug builds add `-DDEBUG -g`, which enables `DebugPrintf` output and debug symbols.
 
-**For iPhone 2G, run:**
-`make iPhone2G`
+### Build output
 
-**For iPhone 3G, run:**
-`make iPhone3G`
+- **`.img3`** — For loading via recovery/iBoot mode (S5L8900, S5L8720 devices)
+- **`.bin`** — For loading via DFU mode (S5L8920, A4 devices)
 
-**For iPod Touch 2G, run:**
-`make iPodTouch2G`
+### Cross-compiler override
 
-**For iPhone 3GS, run:**
-`make iPhone3GS`
+```sh
+make iPhone3G CROSS=arm-none-eabi-
+```
 
-**For iPhone 4, run:**
-`make iPhone4`
+### Other targets
 
-**For iPod Touch 4G, run:**
-`make iPodTouch4G`
+```sh
+make clean    # Remove all build artifacts
+make docs     # Generate Doxygen documentation
+```
 
-**For iPad 1G, run:**
-`make iPad1G`
+## Installing
 
-**For Apple TV 2G, run:**
-`make aTV2G`
+See [INSTALLING.md](INSTALLING.md) for detailed instructions on flashing openiBoot to a device, including:
 
-Append `D` to any target for a debug build (e.g. `make iPhone2GD`). To build all targets at once, run `make`.
+- **Bootlace** (Cydia app, easiest for S5L8900 devices)
+- **Manual install** via recovery mode with `loadibec` + `oibc`
+- **DFU mode** loading for S5L8920/A4 devices
+- **Restoring** the original bootloader
 
-Menu Configuration
----------------------------------------------------
-As of version 0.3 OpeniBoot now has a grub-style configurable menu system, OpeniBoot looks for /boot/menu.lst at boot.
-Below is an example menu.lst - put it in /boot (This section will be expanded upon at a later date, when newer device ports are further ahead)
+## Menu Configuration
 
-	title iOS
-	auto
+openiBoot includes a GRUB-style boot menu. On startup it looks for `/boot/menu.lst` on the data partition. If the file is not found, it drops to the interactive console.
 
-	title Android
-	kernel "(hd0,1)/idroid/zImage" "console=tty root=/dev/ram0 init=/init rw"
-	initrd "(hd0,1)/idroid/android.img.gz"
+Example `/boot/menu.lst`:
 
-	title iX
-	kernel "(hd0,1)/iX/zImage" "console=tty root=/dev/ram0 init=/init rw"
-	initrd "(hd0,1)/iX/initrd.img.gz"
+```
+title iOS
+auto
 
+title Android
+kernel "(hd0,1)/idroid/zImage" "console=tty root=/dev/ram0 init=/init rw"
+initrd "(hd0,1)/idroid/android.img.gz"
 
-Reporting issues/requesting features
---------------------------------------------------
-Please leave bug reports/pull requests in the Github tracker.
+title iX
+kernel "(hd0,1)/iX/zImage" "console=tty root=/dev/ram0 init=/init rw"
+initrd "(hd0,1)/iX/initrd.img.gz"
+```
 
-For anything else, we can be found lurking in #idroid-dev on irc.freenode.net
+**Menu controls (on device):**
+
+| Button | Action |
+|---|---|
+| Home | Select / boot highlighted entry |
+| Hold switch (or Volume Down) | Next entry |
+| Volume Up | Previous entry |
+
+"Console" is always listed as the last menu entry and opens the interactive USB console.
+
+## Interactive Console
+
+openiBoot provides an interactive console accessible over USB using the `oibc` (openiBoot Console) tool. The console supports commands for device inspection, NOR operations, memory access, booting, and more. Type `help` in the console for a list of available commands.
+
+## Project Structure
+
+```
+arch-arm/          ARM architecture support (exception vectors, context switch, asm helpers)
+plat-s5l8900/      S5L8900 platform drivers (iPhone 2G/3G, iPod Touch 1G)
+plat-s5l8720/      S5L8720 platform drivers (iPod Touch 2G)
+plat-s5l8920/      S5L8920 platform drivers (iPhone 3GS)
+plat-a4/           A4 platform drivers (iPhone 4, iPad 1G, iPod Touch 4G, Apple TV 2G)
+includes/          Shared headers
+acm/               USB Abstract Control Model (virtual serial port)
+usb-synopsys/      Synopsys USB OTG driver
+nor-cfi/           CFI NOR flash driver
+nor-spi/           SPI NOR flash driver
+vfl-vfl/           Virtual Flash Layer
+vfl-vsvfl/         VSVFL implementation
+ftl-yaftl/         YAFTL Flash Translation Layer
+hfs/               HFS+ filesystem support
+menu/              Boot menu UI
+installer/         On-device installer
+radio-pmb8876/     PMB8876 baseband radio driver
+radio-pmb8878/     PMB8878 baseband radio driver
+radio-xgold618/    XGold 618 baseband radio driver
+mk8900image/       Tool to package binaries into img3 format
+images/             Boot images and bin2c converter
+```
+
+## Architecture Notes
+
+- All C code compiles as **Thumb** (`-mthumb`) with ARM interworking (`-mthumb-interwork`).
+- Exception handlers and coprocessor manipulation are in **ARM mode** (`.code 32`).
+- The cooperative task scheduler (`tasks.c`) uses manual context switching via `SwapTask` in assembly.
+- Critical sections use IRQ/FIQ disable via direct CPSR manipulation.
+- The VIC (PL192) interrupt controller dispatches through a handler table in the `.data` section.
+
+## License
+
+GNU General Public License v3.0 or later. See [LICENSE.txt](LICENSE.txt).
+
+Copyright (C) 2008-2011 iDroid Project. Originally created by David Wang (planetbeing).
+
+## Links
+
+- [iDroid Project](https://www.idroidproject.org/)
+- [Original repository](https://github.com/iDroid-Project/openiBoot)
